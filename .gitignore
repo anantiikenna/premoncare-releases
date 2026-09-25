@@ -1,0 +1,8 @@
+# binaries never go into git history — they are attached to GitHub Releases
+*.apk
+*.aab
+*.ipa
+*.zip
+*.keystore
+*.jks
+.DS_Store
