@@ -37,6 +37,13 @@ Verify a download against the SHA-256 published in the release notes and in
 .\scripts\release-apk.ps1 -Apk .\app-user-release.apk -Version v1.1.0 -Notes "changelog entry..."
 ```
 
+4. Update `APK_META` (version / size / SHA-256) in the main repo's
+   `apps/web/src/lib/android-download.ts` — that's where the download-button
+   metadata lives (the website `.env` only holds the stable
+   `/releases/latest/download/` URL).
+5. Main repo: redeploy the site with cache cleared so the new `NEXT_PUBLIC_*`
+   build inlines pick up the change.
+
 The script creates the GitHub release and uploads the APK as the release
 asset. It authenticates with the credentials already stored by Git
 Credential Manager — no tokens are kept in this repo. Re-running with an
