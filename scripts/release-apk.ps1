@@ -3,9 +3,14 @@
   Publishes an APK as a GitHub release on the public sidecar repo.
 
 .DESCRIPTION
-  Creates (or updates) the release, then uploads the APK as the release asset
+  Creates (or updates the release), then uploads the APK as the release asset
   with curl. Authenticates with the credential already stored by Git
   Credential Manager - no tokens are stored on disk or in the repo.
+
+  PUBLISHED releases are immutable: if the tag already exists and is not a
+  draft, this script refuses to replace its assets. Publish the next version
+  instead (bump pubspec version, use a new -Version). Draft releases may be
+  re-run freely to fix an upload before announcing the release.
 
   A full upload streams straight from disk, shows progress and retries on
   network errors. Router DNS failures are worked around by resolving
@@ -75,7 +80,13 @@ $rel = $null
 try { $rel = Invoke-Gh "https://api.github.com/repos/$Repo/releases/tags/$Version" } catch { }
 
 if ($rel) {
-    "Release $Version exists - replacing asset '$fileName'"
+    if (-not $rel.draft) {
+        throw ("Release $Version already exists and is PUBLISHED - releases are immutable, refusing to replace its assets.`n" +
+               "If the released build has a mistake, fix forward: bump the version (e.g. -Version v1.0.1) and publish a new release.`n" +
+               "Old builds stay available at https://github.com/$Repo/releases/tag/$Version for rollback.`n" +
+               "To replace a *draft* release, delete the draft at https://github.com/$Repo/releases first.")
+    }
+    "Draft release $Version exists - replacing asset '$fileName'"
     $assets = Invoke-Gh "https://api.github.com/repos/$Repo/releases/$($rel.id)/assets"
     foreach ($a in @($assets)) {
         if ($a.name -eq $fileName) {
